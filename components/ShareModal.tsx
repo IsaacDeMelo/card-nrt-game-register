@@ -7,8 +7,8 @@ interface Props {
 }
 
 const ShareModal: React.FC<Props> = ({ userName, onClose }) => {
-  // Generate link based on current location
-  const baseUrl = window.location.href.split('?')[0];
+  // Generate link using the production URL
+  const baseUrl = 'https://registro-card-rpg.onrender.com';
   const shareLink = `${baseUrl}?recruiter=${encodeURIComponent(userName)}`;
 
   const copyToClipboard = async () => {

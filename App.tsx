@@ -10,7 +10,8 @@ import { registerNinja } from './services/api';
 // Solid Fire Component
 const SolidFire: React.FC = () => {
   const particles = useMemo(() => {
-    return Array.from({ length: 40 }).map((_, i) => ({
+    // Aumentado de 40 para 70 para mais intensidade
+    return Array.from({ length: 70 }).map((_, i) => ({
       id: i,
       left: Math.random() * 100,
       delay: -(Math.random() * 10),
@@ -45,7 +46,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true); // Loading State
 
   useEffect(() => {
-    if (window.location.pathname === '/bingo-book-s-rank') {
+    // Rota alterada para /dashboard
+    if (window.location.pathname === '/dashboard') {
       setIsAdmin(true);
     }
 
@@ -142,7 +144,8 @@ const App: React.FC = () => {
 
   // Logic to copy link even without registering
   const handleCopyPreRegister = async () => {
-    const baseUrl = window.location.href.split('?')[0];
+    // Definir URL base oficial
+    const baseUrl = 'https://registro-card-rpg.onrender.com';
     let shareLink = baseUrl;
     
     // If the user typed their name, create a recruiter link for them immediately
