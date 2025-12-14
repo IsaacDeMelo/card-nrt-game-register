@@ -44,16 +44,50 @@ const SolidFire: React.FC = () => {
 const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Loading State
+  const [isRecruiterLocked, setIsRecruiterLocked] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    whatsapp: '',
+    recruiter: ''
+  });
 
   useEffect(() => {
-    // Rota alterada para /dashboard
+    // 1. Verificar Rota de Admin
     if (window.location.pathname === '/dashboard') {
       setIsAdmin(true);
+      setIsLoading(false);
+      return;
     }
 
-    // Logic to handle loading screen
+    // 2. Lógica de Recrutador via URL (Path ou Query)
+    const path = window.location.pathname; // ex: "/Sasuke"
+    const pathSegment = decodeURIComponent(path.substring(1)); // "Sasuke"
+    
+    // Rotas reservadas que não são nomes de recrutadores
+    const reservedRoutes = ['', 'dashboard', 'bingo-book-s-rank'];
+
+    let recruiterName = '';
+
+    if (path !== '/' && !reservedRoutes.includes(pathSegment)) {
+        // Se tem algo no path e não é reservado, é um recrutador
+        recruiterName = pathSegment;
+    } else {
+        // Fallback: Tenta pegar por Query Param (?recruiter=Sasuke)
+        const params = new URLSearchParams(window.location.search);
+        const queryRecruiter = params.get('recruiter');
+        if (queryRecruiter) {
+            recruiterName = decodeURIComponent(queryRecruiter);
+        }
+    }
+
+    if (recruiterName) {
+        setFormData(prev => ({ ...prev, recruiter: recruiterName }));
+        setIsRecruiterLocked(true); // Trava o campo se veio da URL
+    }
+
+    // 3. Loading Screen Logic
     const handleLoad = () => {
-      // Small timeout to ensure smooth transition and font rendering
       setTimeout(() => {
         setIsLoading(false);
       }, 1500);
@@ -68,22 +102,9 @@ const App: React.FC = () => {
   }, []);
 
   const [selectedClan, setSelectedClan] = useState<ClanType>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    whatsapp: '',
-    recruiter: ''
-  });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showShare, setShowShare] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const recruiter = params.get('recruiter');
-    if (recruiter) {
-      setFormData(prev => ({ ...prev, recruiter: decodeURIComponent(recruiter) }));
-    }
-  }, []);
 
   const handleClanSwitch = (clan: ClanType) => {
     setSelectedClan(clan);
@@ -144,18 +165,19 @@ const App: React.FC = () => {
 
   // Logic to copy link even without registering
   const handleCopyPreRegister = async () => {
-    // Definir URL base oficial
     const baseUrl = 'https://registro-card-rpg.onrender.com';
-    let shareLink = baseUrl;
+    // Remove barra final se existir para evitar //
+    const cleanBase = baseUrl.replace(/\/$/, '');
     
-    // If the user typed their name, create a recruiter link for them immediately
+    let shareLink = cleanBase;
+    
+    // Se o usuário digitou o nome, cria link curto: domain.com/Nome
     if (formData.name.trim().length > 0) {
-        shareLink = `${baseUrl}?recruiter=${encodeURIComponent(formData.name.trim())}`;
+        shareLink = `${cleanBase}/${encodeURIComponent(formData.name.trim())}`;
     }
 
     // Robust Copy Function with Fallback
     const copyToClipboard = async (text: string) => {
-        // Try Modern API
         if (navigator.clipboard && navigator.clipboard.writeText) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -165,7 +187,6 @@ const App: React.FC = () => {
             }
         }
         
-        // Fallback for older browsers or non-secure contexts
         try {
             const textArea = document.createElement("textarea");
             textArea.value = text;
@@ -221,9 +242,7 @@ const App: React.FC = () => {
       */}
       <div className="fixed inset-0 w-full h-full pointer-events-none">
         
-        {/* SUB-LAYER 0: ELEMENTAL EFFECTS (z-0) 
-            Colocamos z-0 explicitamente para garantir que fique atrás do personagem.
-        */}
+        {/* SUB-LAYER 0: ELEMENTAL EFFECTS (z-0) */}
         <div className="absolute inset-0 z-0">
             <div className={`absolute inset-0 transition-opacity duration-1000 ${selectedClan === 'uchiha' ? 'opacity-100' : 'opacity-0'}`}>
                 <SolidFire />
@@ -234,9 +253,7 @@ const App: React.FC = () => {
             </div>
         </div>
 
-        {/* SUB-LAYER 1: CHARACTERS (z-10) 
-            Colocamos z-10 para ficar NA FRENTE do fogo/água.
-        */}
+        {/* SUB-LAYER 1: CHARACTERS (z-10) */}
         <div className="absolute inset-0 z-10 flex justify-center items-start pt-6">
             <BackgroundSlideshow isVisible={!selectedClan} />
             {CLAN_DATA['uchiha'] && <ClanCharacter clanConfig={CLAN_DATA['uchiha']} isVisible={selectedClan === 'uchiha'} />}
@@ -246,7 +263,6 @@ const App: React.FC = () => {
 
       {/* 
           LAYER 1: FORMULÁRIO E CONTEÚDO (SCROLLABLE) (z-20)
-          Fica na frente de tudo.
       */}
       <div className="relative z-20 w-full min-h-screen flex flex-col pt-[22vh] md:pt-[20vh]">
         
@@ -258,7 +274,7 @@ const App: React.FC = () => {
                     {currentClanData ? currentClanData.name : 'ESCOLHA SEU LADO'}
                 </h1>
 
-                {/* Form Card - Neutro e integrado */}
+                {/* Form Card */}
                 <div className="bg-gray-900/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] rounded-t-3xl rounded-b-xl p-6 transition-all duration-300">
                     
                     {/* Toggle Switch */}
@@ -323,8 +339,8 @@ const App: React.FC = () => {
                         id="recruiter" 
                         value={formData.recruiter}
                         onChange={handleInputChange}
-                        readOnly={!!new URLSearchParams(window.location.search).get('recruiter')} 
-                        className={`w-full bg-black/40 border rounded-xl px-4 py-3 outline-none focus:bg-black/60 transition-all text-white placeholder-gray-500 font-body ${errors.recruiter ? 'border-red-500 bg-red-900/20' : 'border-gray-600 focus:border-white'} ${new URLSearchParams(window.location.search).get('recruiter') ? 'text-gray-400 cursor-not-allowed border-gray-700' : ''}`}
+                        readOnly={isRecruiterLocked} 
+                        className={`w-full bg-black/40 border rounded-xl px-4 py-3 outline-none focus:bg-black/60 transition-all text-white placeholder-gray-500 font-body ${errors.recruiter ? 'border-red-500 bg-red-900/20' : 'border-gray-600 focus:border-white'} ${isRecruiterLocked ? 'text-gray-400 cursor-not-allowed border-gray-700' : ''}`}
                         placeholder="Quem recrutou" 
                         />
 

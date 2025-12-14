@@ -7,9 +7,11 @@ interface Props {
 }
 
 const ShareModal: React.FC<Props> = ({ userName, onClose }) => {
-  // Generate link using the production URL
+  // Generate link using the production URL in friendly format
   const baseUrl = 'https://registro-card-rpg.onrender.com';
-  const shareLink = `${baseUrl}?recruiter=${encodeURIComponent(userName)}`;
+  // Removes trailing slash if present and appends name directly
+  const cleanBase = baseUrl.replace(/\/$/, '');
+  const shareLink = `${cleanBase}/${encodeURIComponent(userName)}`;
 
   const copyToClipboard = async () => {
     // Helper function to handle fallback
