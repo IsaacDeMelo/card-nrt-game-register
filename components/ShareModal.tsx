@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface Props {
@@ -20,8 +21,9 @@ const ShareModal: React.FC<Props> = ({ userName, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="bg-gray-900 border border-purple-500/50 rounded-2xl p-6 w-full max-w-md shadow-[0_0_30px_rgba(168,85,247,0.3)] text-center relative">
         <h2 className="font-rpg text-4xl text-purple-400 mb-2 text-shadow-strong">PARABÉNS, NINJA!</h2>
-        <p className="text-gray-300 mb-6 font-body">
-          Seu registro foi enviado para os arquivos da vila. Agora recrute novos aliados para ganhar prestígio!
+        <p className="text-gray-300 mb-6 font-body leading-relaxed">
+          Seu registro foi enviado para os arquivos da vila. <br/>
+          <span className="text-green-400 font-bold block mt-2">A equipe do RPG entrará em contato pelo WhatsApp em breve.</span>
         </p>
 
         <div className="bg-black/50 p-3 rounded-lg border border-white/10 mb-4 break-all">

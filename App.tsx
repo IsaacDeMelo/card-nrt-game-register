@@ -42,10 +42,26 @@ const SolidFire: React.FC = () => {
 
 const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Loading State
 
   useEffect(() => {
     if (window.location.pathname === '/bingo-book-s-rank') {
       setIsAdmin(true);
+    }
+
+    // Logic to handle loading screen
+    const handleLoad = () => {
+      // Small timeout to ensure smooth transition and font rendering
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+    };
+
+    if (document.readyState === 'complete') {
+      handleLoad();
+    } else {
+      window.addEventListener('load', handleLoad);
+      return () => window.removeEventListener('load', handleLoad);
     }
   }, []);
 
@@ -124,6 +140,25 @@ const App: React.FC = () => {
     }
   };
 
+  // Logic to copy link even without registering
+  const handleCopyPreRegister = () => {
+    const baseUrl = window.location.href.split('?')[0];
+    let shareLink = baseUrl;
+    
+    // If the user typed their name, create a recruiter link for them immediately
+    if (formData.name.trim().length > 0) {
+        shareLink = `${baseUrl}?recruiter=${encodeURIComponent(formData.name.trim())}`;
+    }
+
+    navigator.clipboard.writeText(shareLink).then(() => {
+        if (formData.name.trim().length > 0) {
+            alert(`Link gerado e copiado! Recrutador: ${formData.name}`);
+        } else {
+            alert("Link base copiado! Digite seu nome antes de copiar para criar seu link personalizado.");
+        }
+    });
+  };
+
   if (isAdmin) return <SecretAdminPanel />;
 
   const currentClanData = selectedClan ? CLAN_DATA[selectedClan] : null;
@@ -131,6 +166,23 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen w-full relative bg-gray-950 overflow-x-hidden">
       
+      {/* LOADING SCREEN OVERLAY */}
+      <div 
+        className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      >
+         <div className="relative">
+            {/* Spinning Ring */}
+            <div className="w-20 h-20 border-4 border-gray-800 border-t-red-600 border-r-red-600 border-b-green-600 border-l-green-600 rounded-full animate-spin shadow-[0_0_30px_rgba(255,255,255,0.1)]"></div>
+            {/* Static Core */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-[0_0_10px_white]"></div>
+            </div>
+         </div>
+         <h2 className="mt-6 font-rpg text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-green-500 tracking-widest animate-pulse">
+            CARREGANDO CHAKRA...
+         </h2>
+      </div>
+
       {/* 
           LAYER 0: BACKGROUND BASE (FIXED)
       */}
@@ -254,6 +306,15 @@ const App: React.FC = () => {
                         `}
                         >
                         {isSubmitting ? 'ENVIANDO...' : (currentClanData ? currentClanData.btnText : 'ESCOLHA UM CLÃ')}
+                        </button>
+
+                         {/* Pre-Register Copy Link Button */}
+                         <button 
+                            onClick={handleCopyPreRegister}
+                            className="w-full py-3 mt-1 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                            COPIAR LINK DE CONVITE
                         </button>
                     </div>
                 </div>
