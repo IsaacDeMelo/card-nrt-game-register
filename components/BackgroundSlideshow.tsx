@@ -31,7 +31,8 @@ const BackgroundSlideshow: React.FC<Props> = ({ isVisible }) => {
           key={i}
           src={src}
           alt={`Slide ${i}`}
-          className={`slide-image absolute h-[85%] object-contain animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-opacity duration-1000 ease-in-out ${i === index ? 'opacity-100' : 'opacity-0'}`}
+          // Updated height to 120%, added object-top and mt-4 md:mt-0 to match ClanCharacter styles exactly
+          className={`slide-image absolute h-[120%] object-contain object-top mt-4 md:mt-0 animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-opacity duration-1000 ease-in-out ${i === index ? 'opacity-100' : 'opacity-0'}`}
         />
       ))}
     </div>

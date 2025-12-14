@@ -14,12 +14,14 @@ const SecretAdminPanel: React.FC = () => {
         setLoading(false);
       })
       .catch(err => {
-        console.error("Erro ao carregar bingo book:", err);
+        console.error("Erro ao carregar dados:", err);
         setLoading(false);
       });
   }, []);
 
-  // Calcular Ranking de Recrutadores
+  // --- BUSINESS LOGIC ---
+  const totalLeads = ninjas.length;
+  
   const recruiterStats = ninjas.reduce((acc, ninja) => {
     if (ninja.quemRecrutou && ninja.quemRecrutou.trim() !== '') {
       const recruiter = ninja.quemRecrutou.trim();
@@ -28,113 +30,214 @@ const SecretAdminPanel: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  const sortedRanking = Object.entries(recruiterStats)
-    .sort(([, a], [, b]) => (b as number) - (a as number))
-    .slice(0, 5); // Top 5
+  const topRecruiter = Object.entries(recruiterStats)
+    .sort(([, a], [, b]) => (b as number) - (a as number))[0];
+
+  const uchihaCount = ninjas.filter(n => n.cla === 'uchiha').length;
+  const senjuCount = ninjas.filter(n => n.cla === 'senju').length;
 
   const formatWhatsAppLink = (phone: string) => {
-    // Remove tudo que não é número e adiciona 55 (Brasil) se não tiver
     const cleanNumber = phone.replace(/\D/g, '');
     return `https://wa.me/55${cleanNumber}`;
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (loading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center font-rpg text-4xl animate-pulse">Carregando Arquivos Secretos...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 font-medium">Carregando Dashboard...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-8 font-body overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      {/* --- NAVBAR --- */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                N
+              </div>
+              <span className="font-bold text-lg text-gray-800 tracking-tight">Ninja<span className="text-blue-600">Admin</span></span>
+            </div>
+            <div className="flex items-center gap-4">
+              <button onClick={() => window.location.reload()} className="p-2 text-gray-400 hover:text-gray-600 transition">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              </button>
+              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-semibold">
+                A
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         
-        {/* HEADER */}
-        <div className="text-center border-b border-red-800 pb-6">
-          <h1 className="font-rpg text-6xl text-red-600 tracking-widest text-shadow-strong">BINGO BOOK</h1>
-          <p className="text-gray-400">Arquivos confidenciais da Vila. Acesso restrito.</p>
+        {/* --- HEADER --- */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard de Recrutamento</h1>
+          <p className="text-sm text-gray-500 mt-1">Visão geral dos cadastros e desempenho da campanha.</p>
         </div>
 
-        {/* RANKING SECTION */}
-        <div className="bg-gray-800/50 border border-yellow-600/30 rounded-xl p-6 shadow-lg backdrop-blur-md">
-          <h2 className="font-rpg text-3xl text-yellow-500 mb-4 flex items-center gap-2">
-            🏆 TOP RECRUTADORES (KAGE LEVEL)
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {sortedRanking.length > 0 ? sortedRanking.map(([name, count], index) => (
-              <div key={name} className={`flex items-center justify-between p-4 rounded-lg border ${index === 0 ? 'bg-yellow-900/40 border-yellow-500' : 'bg-gray-700/40 border-gray-600'}`}>
-                <div className="flex items-center gap-3">
-                  <span className={`font-rpg text-2xl ${index === 0 ? 'text-yellow-400' : 'text-gray-400'}`}>#{index + 1}</span>
-                  <span className="font-bold text-lg">{name}</span>
+        {/* --- KPI CARDS --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Card 1 */}
+          <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total de Candidatos</p>
+                <p className="text-2xl font-semibold text-gray-900">{totalLeads}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-green-50 text-green-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Top Recrutador</p>
+                <p className="text-lg font-semibold text-gray-900 truncate max-w-[150px]" title={topRecruiter?.[0] || '-'}>
+                  {topRecruiter ? topRecruiter[0] : '-'}
+                </p>
+                <p className="text-xs text-green-600 font-medium">
+                  {topRecruiter ? `${topRecruiter[1]} indicações` : 'Sem dados'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-500">Distribuição</span>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-medium text-gray-700">Uchiha</span>
+                  <span className="text-gray-500">{uchihaCount}</span>
                 </div>
-                <div className="text-right">
-                  <span className="block text-2xl font-bold">{count}</span>
-                  <span className="text-xs text-gray-400 uppercase">Recrutados</span>
+                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="bg-red-500 h-1.5 rounded-full" style={{ width: `${totalLeads ? (uchihaCount/totalLeads)*100 : 0}%` }}></div>
                 </div>
               </div>
-            )) : (
-              <p className="text-gray-500 italic">Nenhum recrutamento registrado ainda.</p>
-            )}
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-medium text-gray-700">Senju</span>
+                  <span className="text-gray-500">{senjuCount}</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${totalLeads ? (senjuCount/totalLeads)*100 : 0}%` }}></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* LISTA COMPLETA */}
-        <div className="bg-gray-900/80 border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
-          <div className="bg-gray-800 px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-            <h2 className="font-rpg text-2xl text-gray-200">TODOS OS REGISTROS ({ninjas.length})</h2>
+        {/* --- TABLE SECTION --- */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+            <h3 className="text-lg font-semibold text-gray-800">Registros Recentes</h3>
+            <span className="text-xs text-gray-500 bg-white border px-2 py-1 rounded-md shadow-sm">
+                Mostrando todos os registros
+            </span>
           </div>
-          
+
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="text-gray-400 text-sm uppercase bg-black/40">
-                  <th className="p-4 font-semibold">Data</th>
-                  <th className="p-4 font-semibold">Nome</th>
-                  <th className="p-4 font-semibold">Clã</th>
-                  <th className="p-4 font-semibold">Recrutado Por</th>
-                  <th className="p-4 font-semibold text-right">Contato</th>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nome / ID
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Clã
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Origem
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Data
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ação
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {ninjas.map((ninja) => (
-                  <tr key={ninja._id} className="hover:bg-gray-800/50 transition-colors">
-                    <td className="p-4 text-gray-500 text-sm font-mono">
-                      {new Date(ninja.dataRegistro).toLocaleDateString('pt-BR')}
+                  <tr key={ninja._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs uppercase">
+                          {ninja.nome.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{ninja.nome}</div>
+                          <div className="text-xs text-gray-500">{ninja.whatsapp}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="p-4 font-bold text-lg text-white">
-                      {ninja.nome}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${
                         ninja.cla === 'uchiha' 
-                          ? 'bg-red-900/30 text-red-400 border-red-800' 
-                          : 'bg-green-900/30 text-green-400 border-green-800'
+                          ? 'bg-red-50 text-red-700 border-red-100' 
+                          : 'bg-green-50 text-green-700 border-green-100'
                       }`}>
                         {ninja.cla}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-300">
-                      {ninja.quemRecrutou || <span className="text-gray-600 italic">-</span>}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {ninja.quemRecrutou || <span className="text-gray-400 italic">Orgânico</span>}
+                      </div>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(ninja.dataRegistro)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <a 
-                        href={formatWhatsAppLink(ninja.whatsapp)} 
-                        target="_blank" 
+                        href={formatWhatsAppLink(ninja.whatsapp)}
+                        target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-transform active:scale-95 shadow-lg shadow-green-900/20"
+                        className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors"
                       >
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z" />
-                        </svg>
-                        WhatsApp
+                        Contatar
                       </a>
-                      <div className="text-xs text-gray-500 mt-1 font-mono">{ninja.whatsapp}</div>
                     </td>
                   </tr>
                 ))}
+                {ninjas.length === 0 && (
+                    <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
-
-      </div>
+      </main>
     </div>
   );
 };
