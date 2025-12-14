@@ -29,7 +29,7 @@ const SecretAdminPanel: React.FC = () => {
   }, {} as Record<string, number>);
 
   const sortedRanking = Object.entries(recruiterStats)
-    .sort(([, a], [, b]) => b - a)
+    .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 5); // Top 5
 
   const formatWhatsAppLink = (phone: string) => {

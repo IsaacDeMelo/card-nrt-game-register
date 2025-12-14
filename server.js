@@ -20,13 +20,17 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // --- MONGODB CONNECTION ---
-const MONGO_URI = "mongodb+srv://isaachonorato41:brasil2021@cluster0.mongodb.net/narutorpg?retryWrites=true&w=majority";
+// URL Atualizada com o cluster correto (cluster0.rxemo)
+const MONGO_URI = "mongodb+srv://isaachonorato41:brasil2021@cluster0.rxemo.mongodb.net/narutorpg?retryWrites=true&w=majority&appName=Cluster0";
 
 console.log("Tentando conectar ao MongoDB...");
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Conectado com Sucesso!"))
-  .catch(err => console.error("❌ Erro ao conectar no MongoDB:", err));
+  .catch(err => {
+    console.error("❌ Erro ao conectar no MongoDB:", err);
+    console.log("ℹ️  Verifique se o IP 0.0.0.0/0 está liberado no 'Network Access' do MongoDB Atlas.");
+  });
 
 // Schema do Ninja
 const NinjaSchema = new mongoose.Schema({
@@ -67,12 +71,12 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Rota para o painel administrativo (Listar todos)
-// Em um app real, adicione autenticação aqui.
 app.get('/api/admin/all-ninjas', async (req, res) => {
   try {
     const ninjas = await Ninja.find().sort({ dataRegistro: -1 }); // Mais recentes primeiro
     res.json(ninjas);
   } catch (error) {
+    console.error("Erro ao buscar ninjas:", error);
     res.status(500).json({ error: "Erro ao buscar ninjas" });
   }
 });
