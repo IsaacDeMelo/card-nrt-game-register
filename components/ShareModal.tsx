@@ -11,10 +11,40 @@ const ShareModal: React.FC<Props> = ({ userName, onClose }) => {
   const baseUrl = window.location.href.split('?')[0];
   const shareLink = `${baseUrl}?recruiter=${encodeURIComponent(userName)}`;
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareLink).then(() => {
-      alert("Link copiado para a área de transferência!");
-    });
+  const copyToClipboard = async () => {
+    // Helper function to handle fallback
+    const copyText = async (text: string) => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                // Fail silently and try fallback
+            }
+        }
+        
+        try {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; // Avoid scrolling
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return successful;
+        } catch (err) {
+            return false;
+        }
+    };
+
+    const success = await copyText(shareLink);
+    if (success) {
+        alert("Link copiado para a área de transferência!");
+    } else {
+        prompt("Não foi possível copiar automaticamente. Selecione e copie o link abaixo:", shareLink);
+    }
   };
 
   return (

@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 
 const IMAGES = [
   "https://i.pinimg.com/originals/1c/b7/40/1cb74003661914b3a9f3b12771c8cb20.png",
   "https://i.pinimg.com/originals/c4/f2/6e/c4f26eebb1537abac1ec5d1aad60fc43.png",
   "https://i.pinimg.com/originals/c4/27/53/c42753d4c7b1307ac5c1beb822d35750.png",
-  "https://i.namu.wiki/i/5E49YCyql0dS7PLUcm365bnJ9CmcLmOYopBPagIZ2RBXdZfZhlDuO9nYQ0gPYhDI2qY5_msZRgNetFVbdFUAYg.webp"
+  "https://i.namu.wiki/i/53nln0f7z8tIPz9fdoQa6hHnZAi1sid-bLLpBiCGttYxWIKVAZovrLeFmgkn-u9okxF6yxUgPSAMfu9edmdA8Q.webp"
 ];
 
 interface Props {

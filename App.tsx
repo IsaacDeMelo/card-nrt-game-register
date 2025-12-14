@@ -141,7 +141,7 @@ const App: React.FC = () => {
   };
 
   // Logic to copy link even without registering
-  const handleCopyPreRegister = () => {
+  const handleCopyPreRegister = async () => {
     const baseUrl = window.location.href.split('?')[0];
     let shareLink = baseUrl;
     
@@ -150,13 +150,47 @@ const App: React.FC = () => {
         shareLink = `${baseUrl}?recruiter=${encodeURIComponent(formData.name.trim())}`;
     }
 
-    navigator.clipboard.writeText(shareLink).then(() => {
+    // Robust Copy Function with Fallback
+    const copyToClipboard = async (text: string) => {
+        // Try Modern API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.warn("Clipboard API failed, trying fallback...");
+            }
+        }
+        
+        // Fallback for older browsers or non-secure contexts
+        try {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const success = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return success;
+        } catch (err) {
+            console.error("Fallback copy failed", err);
+            return false;
+        }
+    };
+
+    const success = await copyToClipboard(shareLink);
+
+    if (success) {
         if (formData.name.trim().length > 0) {
             alert(`Link gerado e copiado! Recrutador: ${formData.name}`);
         } else {
             alert("Link base copiado! Digite seu nome antes de copiar para criar seu link personalizado.");
         }
-    });
+    } else {
+        prompt("Não foi possível copiar automaticamente. Por favor, copie o link abaixo:", shareLink);
+    }
   };
 
   if (isAdmin) return <SecretAdminPanel />;
@@ -166,21 +200,17 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen w-full relative bg-gray-950 overflow-x-hidden">
       
-      {/* LOADING SCREEN OVERLAY */}
+      {/* LOADING SCREEN OVERLAY - RINNEGAN */}
       <div 
-        className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[100] bg-gray-950 flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       >
-         <div className="relative">
-            {/* Spinning Ring */}
-            <div className="w-20 h-20 border-4 border-gray-800 border-t-red-600 border-r-red-600 border-b-green-600 border-l-green-600 rounded-full animate-spin shadow-[0_0_30px_rgba(255,255,255,0.1)]"></div>
-            {/* Static Core */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-[0_0_10px_white]"></div>
-            </div>
+         <div className="relative flex items-center justify-center">
+            <img 
+                src="https://freepngimg.com/save/113065-rinnegan-download-free-image/840x780" 
+                alt="Carregando..." 
+                className="w-48 h-48 object-contain animate-spin" 
+            />
          </div>
-         <h2 className="mt-6 font-rpg text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-green-500 tracking-widest animate-pulse">
-            CARREGANDO CHAKRA...
-         </h2>
       </div>
 
       {/* 
